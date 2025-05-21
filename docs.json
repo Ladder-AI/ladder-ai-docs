@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Ladder + TTFT",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -11,46 +11,50 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Docs",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Overview",
+            "pages": ["index", "quickstart", "dataset_generation"]
+          },
+          {
+            "group": "Engines",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "engines/llm_engine",
+              "engines/difficulty_engine",
+              "engines/verification_engine"
             ]
           },
           {
-            "group": "Essentials",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
+            "group": "Finetuning",
+            "pages": ["finetuning/ladder", "finetuning/ttrl"]
+          },
           {
-            "group": "API Documentation",
+            "group": "Deployment",
+            "pages": ["deployment/huggingface"]
+          },
+          {
+            "group": "Evaluation & Metrics",
             "pages": [
-              "api-reference/introduction"
+              "evaluation/evaluation_metrics",
+              "evaluation/benchmarking"
             ]
           },
           {
-            "group": "Endpoint Examples",
+            "group": "Use Cases",
+            "pages": ["use_cases/graph_theory"]
+          },
+          {
+            "group": "Others",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "others/configuration",
+              "others/cli",
+              "others/accelerators"
             ]
+          },
+          {
+            "group": "Notebooks",
+            "pages": []
           }
         ]
       }
@@ -58,45 +62,33 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "GitHub",
+          "href": "https://github.com/AbdelrahmanAbounida/ladder",
+          "icon": "github"
         }
       ]
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/assets/logo/light2.png",
+    "dark": "/assets/logo/dark3.png"
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:your-email@example.com"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "GitHub Repo",
+      "href": "https://github.com/AbdelrahmanAbounida/ladder"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/AbdelrahmanAbounida/ladder"
     }
   }
 }

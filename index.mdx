@@ -1,71 +1,84 @@
 ---
-title: Introduction
-description: "Welcome to the home of your new documentation"
+title: Overview
+description: "Fine-tune LLMs effortlessly—make smaller models smarter without curated data."
 ---
+
+A modular framework for self-improving Large Language Models (LLMs) via recursive problem decomposition and test-time reinforcement learning.
+This project is a reimplementation and extension of the ideas from the paper:
+[LADDER: Self-Improving LLMs Through Recursive Problem Decomposition](https://arxiv.org/pdf/2503.00735).
 
 <img
   className="block dark:hidden"
-  src="/images/hero-light.png"
-  alt="Hero Light"
+  src="/assets/workflow/light.svg"
+  alt="Workflow Light"
 />
 <img
   className="hidden dark:block"
-  src="/images/hero-dark.png"
-  alt="Hero Dark"
+  src="/assets/workflow/dark.svg"
+  alt="Workflow Dark"
 />
+
+## Why Ladder?
+
+1. **No Curated Datasets or Human Feedback Needed** \
+   Ladder empowers LLMs to improve autonomously by generating and solving their own progressively simpler variants of complex problems, eliminating the need for labeled datasets or human intervention.
+
+2. **Structured Self-Learning and Curriculum Creation** \
+   The recursive decomposition process forms a natural difficulty gradient, allowing the model to build a curriculum tailored to its current capabilities and learn incrementally.
+
+3. **Test-Time Reinforcement Learning (TTRL)** \
+   Ladder extends to inference time, where models dynamically generate and solve new variants of test problems, achieving state-of-the-art results—such as 90% accuracy on the MIT Integration Bee, outperforming even OpenAI’s o1 model.
+
+4. **Generalizable and Cost-Effective** \
+   The approach is domain-agnostic and can be applied wherever formal verification is possible, including math, programming, and theorem proving. It is highly scalable and cost-effective, as it does not require external data or expensive human annotation.
+
+5. **Moves Beyond Naive Scaling** \
+   Ladder demonstrates that strategic self-improvement and recursive learning can unlock new capabilities in LLMs, challenging the notion that bigger models alone drive progress.
+
+---
+
+## Core Components
+
+1. **Dataset Generation**  
+   Automatically generates and verifies problem variants, creating a natural difficulty gradient for self-improvement—no curated datasets or human annotation required.
+
+2. **Engines**
+
+   - **Verification Engine:** Confirms solution correctness using domain-specific checks.
+   - **Recursive Tree Engine:** Decomposes complex tasks into manageable subproblems.
+   - **Difficulty Engine:** Adjusts problem complexity to match model capability.
+   - **LLM Engine:** Interfaces with various language models for flexible deployment.
+
+3. **Ladder**  
+   Uses reward signals from the verification engine to guide model learning through reinforcement learning with the GRPO protocol, enabling autonomous, curriculum-driven improvement.
+
+4. **TTRL (Test-Time Reinforcement Learning)**  
+   Extends self-improvement to inference by dynamically generating and solving new variants of test problems, further boosting performance on challenging tasks.
+
+---
 
 ## Setting up
 
-The first step to world-class documentation is setting up your editing environments.
+Get started with your own experiments and development:
 
 <CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install and run Ladder + TTFT locally in minutes.
+  </Card>
   <Card
-    title="Edit Your Docs"
+    title="Dataset Generation"
     icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
+    href="/dataset_generation"
   >
-    Get your docs set up locally for easy development
-  </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
+    Generate dataset for your problem using ai
   </Card>
 </CardGroup>
 
-## Make it yours
+---
 
-Update your docs to your brand and add valuable content for the best user conversion.
+## Next Steps
 
-<CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
-  </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/content/components/accordions"
-  >
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
-  </Card>
-</CardGroup>
+Explore the documentation to learn about dataset generation, engines, finetuning, deployment, and more.  
+Ready to dive in? Start with the [Quickstart](quickstart) guide!
+
+---
