@@ -1,3 +1,12 @@
 ---
 title: LLM Engine
 ---
+
+The **LLM Engine** serves as the operational core for model interaction within the Ladder AI framework. It provides a unified interface to manage and coordinate both large and small language models, facilitating seamless integration with various model providers and architectures. The engine is responsible for handling all model-related tasks, including prompt formatting, response parsing, and orchestrating the flow of information between different components of the system.
+
+```python llm_engin.py
+
+from ladder.engines import LLMEngine
+
+llm_engine = LLMEngine(lm="openai/gpt-3.5-turbo")
+```

@@ -1,0 +1,9 @@
+The **Difficulty Engine** is designed to dynamically assess and control the complexity of the problems presented to the smaller LLM during training. By analyzing the current performance and learning progression of the model, the engine determines the appropriate level of challenge for each iteration. It employs a range of strategies, such as adjusting the depth of problem decomposition or introducing targeted transformations, to ensure that the generated subproblems remain within a range that is neither too easy nor too difficult for the model. This adaptive approach is critical for maintaining an effective learning curve and for maximizing the efficiency of the self-improvement process.
+
+```python llm_engin.py
+
+from ladder.engines import LLMEngine
+
+llm_engine = LLMEngine(lm="openai/gpt-3.5-turbo")
+difficulty_engine = DifficultyEngine(llm_engine=llm_engine)
+```

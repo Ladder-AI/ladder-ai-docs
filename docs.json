@@ -14,8 +14,8 @@
         "tab": "Docs",
         "groups": [
           {
-            "group": "Overview",
-            "pages": ["index", "quickstart", "dataset_generation"]
+            "group": "Getting Started",
+            "pages": ["index", "quickstart", "concepts"]
           },
           {
             "group": "Engines",
@@ -48,8 +48,8 @@
             "group": "Others",
             "pages": [
               "others/configuration",
-              "others/cli",
-              "others/accelerators"
+              "others/accelerators",
+              "others/cli"
             ]
           },
           {

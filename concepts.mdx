@@ -1,0 +1,98 @@
+---
+title: Concepts
+description: ""
+---
+
+Ladder AI is designed to enable **self-improving large language models** through recursive problem decomposition and reinforcement-based learning. Below are the core components that power this system.
+
+---
+
+## How It Works
+
+Ladder AI enables a smaller language model to enhance its problem-solving capabilities through a structured, autonomous learning process. To get started, you simply provide a complex problem description. ideally one that is challenging for smaller LLMs and, if available, sample examples. The Ladder framework then orchestrates the following workflow:
+
+- **Variant Generation**: Ladder constructs a tree-structured dataset by generating a diverse set of problem variants. These variants span a range of difficulties, systematically challenging the smaller model.
+- **Evaluation Loop**: The smaller LLM attempts to solve these generated problems, while a larger, more capable LLM is used to evaluate and verify the smaller model’s outputs. This feedback loop enables the smaller model to iteratively improve its performance.
+- **Training and Optimization**: The training process alternates between two key methods: the Ladder framework (recursive problem decomposition with reinforcement learning) and Test-Time Reinforcement Learning (TTRL), which further refines the model’s abilities during inference.
+- **Agent-Based Architecture**: Specialized agents—referred to as “Engines”—handle different tasks within the workflow, including variant generation, verification, and reinforcement learning.
+
+**Inputs:**
+
+- A detailed problem description that is non-trivial for a small LLM to solve.
+- Access to a large LLM (such as OpenAI models) to serve as the core of LadderAI Engines (Agents)
+- A smaller LLM (such as Qwen) that you wish to train and improve.
+
+**Output:**
+
+- A fine-tuned smaller LLM that demonstrates improved capability in solving the specified class of problems, leveraging self-improvement through recursive decomposition and reinforcement learning.
+
+# Ladder AI Core Components
+
+## 📦 1. Dataset Generator
+
+Ladder automatically generates diverse problem variants and verifies them, creating a **natural difficulty gradient**—completely eliminating the need for curated datasets or manual annotations.
+
+- Enables continuous data creation
+- Adapts to model performance
+- Forms the foundation for curriculum learning
+- uses different engine during this process
+
+if you already have your dataset this process could be skipped
+
+## ⚙️ 2. Engines
+
+#### 1. Verification Engine
+
+Validates the correctness of generated answers using **domain-specific logic** and customizable rules. This ensures quality control without relying on human evaluation.
+
+#### 2. Recursive Tree Engine
+
+Breaks down complex problems into **manageable subproblems** recursively. This tree-based decomposition allows smaller models to tackle simpler tasks and combine their results.
+
+#### 3. Difficulty Engine
+
+Dynamically adjusts problem complexity to suit the model’s current ability, guided by the **LLM Intelligence Ratio**. Enables curriculum-based training progression.
+
+#### 4. LLM Engine
+
+Provides a flexible interface to plug in and control various language models (e.g., **Hugging Face, Ollama, VLLM, DeepSpeed, LiteLLM**). Handles prompting, sampling, and persona injection.
+
+---
+
+## 🪜 3. Ladder
+
+The core training loop uses **reward signals** from the verification engine to fine-tune models via the **GRPO protocol** (Guided Reinforcement via Pseudo-Optimization). This allows models to:
+
+- Improve autonomously
+- Learn from feedback
+- Adapt through curriculum-driven reinforcement learning
+
+---
+
+## 🔁 TTRL — Test-Time Reinforcement Learning
+
+Extends the Ladder framework to **inference time** by:
+
+- Dynamically generating test problem variants
+- Solving them using the trained model
+- Refining its understanding through test-time feedback
+
+TTRL boosts performance on harder problems by **learning during inference**, not just training.
+
+---
+
+## 🎯 Summary
+
+| Component             | Role                                                  |
+| --------------------- | ----------------------------------------------------- |
+| Dataset Generator     | Automatic creation + verification of training data    |
+| Recursive Tree Engine | Breaks complex tasks into smaller subproblems         |
+| Verification Engine   | Validates results using rules or small models         |
+| Difficulty Engine     | Scales complexity to match model skill                |
+| LLM Engine            | Interfaces with and manages LLM behavior              |
+| Ladder (GRPO)         | Reinforcement-driven self-improvement during training |
+| TTRL                  | Self-improvement during inference                     |
+
+Together, these components form a **closed feedback loop** that enables LLMs to teach themselves how to solve harder problems without curated data or human intervention.
+
+---

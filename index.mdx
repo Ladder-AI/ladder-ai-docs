@@ -1,9 +1,10 @@
 ---
-title: Overview
-description: "Fine-tune LLMs effortlessly—make smaller models smarter without curated data."
+title: Introduction
+description: "Fine-tune LLMs effortlessly, make smaller models smarter without even curated dataset"
 ---
 
-A modular framework for self-improving Large Language Models (LLMs) via recursive problem decomposition and test-time reinforcement learning.
+[Ladder AI](https://github.com/Ladder-AI/ladder-ai) is a modular framework for self-improving Large Language Models (LLMs) via recursive problem decomposition and test-time reinforcement learning.
+
 This project is a reimplementation and extension of the ideas from the paper:
 [LADDER: Self-Improving LLMs Through Recursive Problem Decomposition](https://arxiv.org/pdf/2503.00735).
 
@@ -34,26 +35,6 @@ This project is a reimplementation and extension of the ideas from the paper:
 
 5. **Moves Beyond Naive Scaling** \
    Ladder demonstrates that strategic self-improvement and recursive learning can unlock new capabilities in LLMs, challenging the notion that bigger models alone drive progress.
-
----
-
-## Core Components
-
-1. **Dataset Generation**  
-   Automatically generates and verifies problem variants, creating a natural difficulty gradient for self-improvement—no curated datasets or human annotation required.
-
-2. **Engines**
-
-   - **Verification Engine:** Confirms solution correctness using domain-specific checks.
-   - **Recursive Tree Engine:** Decomposes complex tasks into manageable subproblems.
-   - **Difficulty Engine:** Adjusts problem complexity to match model capability.
-   - **LLM Engine:** Interfaces with various language models for flexible deployment.
-
-3. **Ladder**  
-   Uses reward signals from the verification engine to guide model learning through reinforcement learning with the GRPO protocol, enabling autonomous, curriculum-driven improvement.
-
-4. **TTRL (Test-Time Reinforcement Learning)**  
-   Extends self-improvement to inference by dynamically generating and solving new variants of test problems, further boosting performance on challenging tasks.
 
 ---
 

@@ -1,0 +1,60 @@
+---
+title: Ladder
+---
+
+{/* 🪜 */}
+**Ladder** is the core training Algorithm of Ladder AI that enables **self-improvement of small LLMs** through recursive decomposition and guided fine-tuning.
+
+It uses a combination of **curriculum learning**, **reinforcement learning**, and **automated dataset generation** to train smaller models without relying on manually curated data or annotations.
+
+---
+
+```python llm_engin.py
+
+from ladder.finetuning import Ladder
+
+ladder = Ladder(vladder=Qtrain, config=config,verification_engine=verification_engine, reward_funcs=[]) # add custom reward functions as u need
+finetuned_model = ladder.finetune(save_locally=True)
+
+```
+
+### Custom Reward Functions
+
+```python
+def reward_func(prompts: list[str], completions: list[str], **kwargs) -> list[float]:
+    """ Write here your custom reward function that will be used in ladder loop """
+```
+
+## 🔁 Training Loop Overview
+
+The Ladder loop consists of the following key stages:
+
+1. **Problem Decomposition**  
+   The task is recursively broken down into simpler subproblems using the **Recursive Tree Engine**.
+
+2. **Solution Generation**  
+   The **smaller LLM** attempts to solve subproblems.
+
+3. **Verification & Evaluation**  
+   A **larger LLM** or a domain-specific **Verification Engine** checks the solution quality.
+
+4. **Reward Assignment**  
+   Rewards are computed based on the correctness and usefulness of answers. These guide learning via the **GRPO (Guided Reinforcement via Pseudo-Optimization)** protocol.
+
+5. **Model Update**  
+   The smaller LLM is fine-tuned using the collected rewards and verified data points.
+
+---
+
+## 🔍 Role of Engines
+
+Ladder coordinates multiple modular **Engines** (or agents), each responsible for a specific part of the process:
+
+- **Recursive Tree Engine**: Breaks down problems into subproblems
+- **Verification Engine**: Validates output correctness
+- **Difficulty Engine**: Modulates complexity
+- **LLM Engine**: Interfaces with both large and small models
+
+These components work together to ensure high-quality training feedback with minimal manual intervention.
+
+---

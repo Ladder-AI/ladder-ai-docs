@@ -1,3 +1,28 @@
 ---
 title: Verification Engine
 ---
+
+The Verification Engine acts as the quality gatekeeper within the Ladder AI workflow. It utilizes a larger, more capable LLM to rigorously evaluate the outputs produced by the smaller, fine-tuning LLM. Through a combination of formal proof checking, counterexample testing, and consensus voting, the Verification Engine ensures that only correct and high-quality solutions are accepted. This continuous feedback loop is crucial for the self-improvement process, as it allows the smaller model to learn from its mistakes and iteratively refine its reasoning strategies, guided by reliable and automated validation.
+
+## how To Write Custom Verification Engine
+
+```python custom_verification.py
+
+from ladder.engines import LLMEngine, VerificationEngine
+from ladder.data_gen.schema import Problem
+
+
+class GraphVerificationEngine(VerificationEngine):
+
+    def verify(self, problem: Problem) -> float:
+        """Automated verification of LLM Solution"""
+        # Should return:
+        # - 1.0 if the solution is correct
+        # - 0.0 if it is incorrect
+
+        # in this base class we will be using the llm_engine to verify the solution , but u can override this for custom verification
+        # write here your custom verification function
+
+llm_engine = LLMEngine(lm="openai/gpt-3.5-turbo")
+verification_engine = GraphVerificationEngine(llm_engine=llm_engine)
+```
