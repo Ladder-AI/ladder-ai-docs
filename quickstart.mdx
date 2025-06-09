@@ -32,13 +32,24 @@ os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY")
 ```python
 
 from ladder import  LadderConfig, create_dataset, finetune_model
-from ladder.llms import OpenAIModel
+from ladder.llms import OpenAIModel, OllamaModel
 
 problem_description = "Your Problem Description here "
 
 config = LadderConfig(
+    # 1- Main LLM for dataset generation, ladder implementation
     instructor_llm = OpenAIModel(model="gpt-3.5-turbo", api_key=os.environ.get("OPENAI_API_KEY") ),
-    target_finetune_llm ="Qwen/Qwen2-7B",
+
+    # 2- To the run the same LLM for finetuning (make sure ollama is running locally)
+    finetune_llm_runner = OllamaModel(model="llama3.2:latest",),
+
+    # 3- Target LLM to finetune (hugginfacehub compatible)
+    target_finetune_llm_id="meta-llama/Llama-3.1-8B-Instruct",
+
+    # 4- Number of steps to finetune
+    num_train_epochs=1,
+
+    # 5- add more configs as needed
 )
 
 # Step1 - generate dataset (if u dont have one)
