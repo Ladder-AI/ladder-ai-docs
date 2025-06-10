@@ -9,7 +9,7 @@ This quickstart demonstrates how to fine-tune an LLM using Ladder AI on a graph 
 
 ## 1. Install Requirements
 
-```sh
+```sh setup
 pip install ladder-ai trl
 ```
 
@@ -19,7 +19,7 @@ pip install ladder-ai trl
 
 Create a `.env` file in your project root with your HuggingFace and OpenAI API keys:
 
-```python
+```python main.py
 import os
 os.environ["HF_TOKEN"] = os.environ.get("HF_TOKEN")
 os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY")
@@ -29,7 +29,7 @@ os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY")
 
 ## 3. Generate Dataset
 
-```python
+```python main.py
 
 from ladder import  LadderConfig, create_dataset, finetune_model
 from ladder.llms import OpenAIModel, OllamaModel
@@ -58,7 +58,7 @@ dataset = create_dataset(problem_description=problem_description, config=config,
 
 ## 4. Ladder
 
-```python
+```python main.py
 
 ## VLadder Dataset
 vladder_dataset = dataset.to_vladder()
