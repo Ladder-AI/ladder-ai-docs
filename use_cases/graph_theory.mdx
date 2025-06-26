@@ -1,3 +1,375 @@
 ---
-title: 1. Graph Theory
+title: 1. Math Problem
 ---
+
+The main problem selected to apply the ladder algorithm on is to select the nearest point on a curve to a specific point
+I tested this problem over many intelligent models and they even failed to sovle it even for linear equation until u force the model
+to do reasoning or multisteps and u gonna find also some hallucinations in the output.
+
+# 1- Dataset Generation
+
+First I used `gpt-3 turbo` Model for the dataset generation process using the following problem description and example
+
+```py
+from ladder.schema import Example
+
+problem_description = """
+                    Given a curve / line equation and a specific point, find the nearest point on the curve
+                    to the given point. Provide your final answer directly as a tuple (x, y) without
+                    any additional explanation or commentary.
+                    NOTES:
+                        1. always mention the point as (x, y) in your question
+                        2. dont mention word points like origin, point on x axis always specifie x and y of the point
+                        3. curve could be any degree 1,2,3... huge diverse output
+                        4. Dont mention any other variables in the given equation like a,t , ... only y in terms of x like y = x**2 + 2
+                        5. Make sure maxium equation power u generate is 5
+                    IMPORTANT: Make sure the represented curve or line is just one equation dont mention multiple equations
+                    """
+examples = [
+   Example(
+    question="Find the point on the curve defined by the equation y = 2x**2 + 5*x - 3 that is closest to the point (6, -1). Provide the coordinates of this nearest point as a tuple (x, y) without any additional explanation or commentary.",
+    answer="(2,1)"
+)
+]
+```
+
+The First Model selected for the Ladder Finetuning Test was `metallama 3.1 8b`
+
+```py
+config = LadderConfig(
+    # 1- Main LLM for dataset generation, ladder implementation
+    instructor_llm = OpenAIModel(model="gpt-3.5-turbo", api_key=os.environ.get("OPENAI_API_KEY") ),
+    # instructor_llm=TogetherAIModel(model="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",api_key="79da0f0c5a2c5dca6c1d6416bec24640b710d86dd4e615aff8e2759af4a10239"),
+    # 2- To the run the same LLM for finetuning
+    finetune_llm_runner = GroqModel(model="llama-3.1-8b-instant", api_key="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"),
+
+    # 3- Target LLM to finetune (hugginfacehub compatible)
+    target_finetune_llm_id="meta-llama/Llama-3.1-8B-Instruct",
+
+    # 4- Number of steps to finetune
+    num_train_epochs=1,
+
+)
+```
+
+## Sample Generated Dataset
+
+```json
+{
+  "question": "Find the point on the curve defined by the equation y = 3x**3 - 2x**2 + 4*x - 1 that is closest to the point (2, -3). Provide the coordinates of this nearest point as a tuple (x, y) without any additional explanation or commentary.",
+  "correct_answer": [1.65, 7.277],
+  "small_llm_answer": "(-2/3, 17/3)",
+  "sub_problems": [
+    {
+      "question": "Find the point on the curve defined by the equation y = x**2 - 4x + 3 that is closest to the point (1, 2). Provide the coordinates of this nearest point as a tuple (x, y) without any additional explanation or commentary.",
+      "correct_answer": [2, 1],
+      "small_llm_answer": [-2.0, 3.0],
+      "transformations_applid": [],
+      "difficulty_level": null,
+      "is_solvable": false
+    },
+    {
+      "question": "Find the point on the curve defined by the equation y = x**2 - 4x + 3 that is closest to the point (3, 1). Provide the coordinates of this nearest point as a tuple (x, y) without any additional explanation or commentary.",
+      "correct_answer": [2, 1],
+      "small_llm_answer": [-2.0, 3.0],
+      "transformations_applid": [],
+      "difficulty_level": null,
+      "is_solvable": false
+    },
+    {
+      "question": "Find the point on the curve defined by the equation y = 2x - 1 that is closest to the point (3, 1). Provide the coordinates of this nearest point as a tuple (x, y) without any additional explanation or commentary.",
+      "correct_answer": [2, 3],
+      "small_llm_answer": [1.0, 1.0],
+      "transformations_applid": [],
+      "difficulty_level": null,
+      "is_solvable": false
+    }
+  ],
+  "difficulty_level": 0.8,
+  "is_solvable": false
+}
+```
+
+# 2- Custom Verification Engine
+
+<Warning>
+  The Created Verification Engine sometimes failed to extract the equation or to
+  evaluate it (so it seems I might need more advanced method)
+</Warning>
+
+to verify the solution I used sympy and regex to extract the equation and evaluate it
+
+```py
+from ladder.engines import VerificationEngine, LLMEngine
+from typing_extensions import Union
+from loguru import logger
+try:
+    from scipy.optimize import minimize_scalar
+    import numpy as np
+    import sympy as sp
+except ImportError:
+    raise ImportError("NearestPointVerificationEngine requires scipy, numpy, and sympy to be installed. run `pip install scipy numpy sympy`")
+import re
+
+class NearestPointVerificationEngine(VerificationEngine):
+    """ Custom Verification engine to select the nearest point on a curve / line to a reference point """
+
+    def verify(self, problem_question: str, given_answer: str | tuple):
+        # get correct answer
+        closest_point = self.get_correct_answer(problem_question)
+        if not closest_point:
+            return 0
+        # Calculate difference between answer and closest point
+        answer_tuple = self._ensure_tuple(given_answer)
+        if not answer_tuple:
+            return 0
+
+        difference = self._calculate_difference(answer_tuple, closest_point)
+        logger.success(f"difference: {difference}")
+
+        return max(0, 1 - difference)
+
+    def get_correct_answer(self, problem_question: str ):
+        """
+        Get the correct answer for the problem question
+        """
+        equation_str, reference_point = self._parse_problem_question(problem_question)
+        if not equation_str or not reference_point:
+            return None
+
+        return self._closest_point_on_curve_tool(equation_str, reference_point)
+
+
+    def _parse_problem_question(self, question_text: str) -> tuple[str, tuple]:
+        """
+        Extract equation and reference point from problem question text.
+        """
+        # More robust equation pattern that handles complete mathematical expressions
+        # Look for y = followed by mathematical expression until I hit specific stop words
+        # I tried here all possible stop words generally found in the generation prompt
+        equation_pattern = r'y\s*=\s*([x\d\s\*\+\-\/\.\^()]+(?:\s*[\+\-]\s*[x\d\s\*\+\-\/\.\^()]+)*)\s*(?=\s+(?:that|which|where|find|give|at|near|closest|from)\b|$)'
+        equation_match = re.search(equation_pattern, question_text, re.IGNORECASE)
+
+        if not equation_match:
+            fallback_pattern = r'y\s*=\s*([^()]*?)(?=\s*\([^)]*\d[^)]*\)|\s+that\b|\s+which\b|\s+where\b)'
+            equation_match = re.search(fallback_pattern, question_text, re.IGNORECASE)
+
+            if not equation_match:
+                return None, None
+
+        equation_str = equation_match.group(1).strip()
+
+        equation_str = self._normalize_equation(equation_str)
+
+        if equation_str.endswith(('+', '-', '*', '/', '^')):
+            extended_pattern = r'y\s*=\s*([x\d\s\*\+\-\/\.\^()]+(?:\s*[\+\-]\s*[x\d\s\*\+\-\/\.\^()]+)*(?:\s*[\+\-]\s*\d+)?)'
+            extended_match = re.search(extended_pattern, question_text, re.IGNORECASE)
+            if extended_match:
+                equation_str = self._normalize_equation(extended_match.group(1).strip())
+
+        point_pattern = r'\(\s*([+-]?\d*\.?\d+)\s*,\s*([+-]?\d*\.?\d+)\s*\)'
+        point_match = re.search(point_pattern, question_text)
+
+        if not point_match:
+            if "origin" in question_text.lower():
+                return equation_str, (0, 0)
+            return equation_str, None
+
+        x_coord = float(point_match.group(1))
+        y_coord = float(point_match.group(2))
+        reference_point = (x_coord, y_coord)
+
+        return equation_str, reference_point
+
+
+    def _normalize_equation(self, equation_str: str) -> str:
+        """
+        Normalize the equation string for SymPy parsing.
+        """
+        equation_str = re.sub(r'\s+', '', equation_str)
+        equation_str = equation_str.replace('^', '**')
+
+        equation_str = re.sub(r'(\d)([x])', r'\1*\2', equation_str)
+        equation_str = re.sub(r'([x])(\d)', r'\1*\2', equation_str)
+
+        equation_str = re.sub(r'(\d)([x])', r'\1*\2', equation_str)
+
+        equation_str = re.sub(r'(\d)\(', r'\1*(', equation_str)
+        equation_str = re.sub(r'\)(\d)', r')*\1', equation_str)
+        equation_str = re.sub(r'\)([x])', r')*\1', equation_str)
+        equation_str = re.sub(r'([x])\(', r'\1*(', equation_str)
+
+        return equation_str
+
+    def _ensure_tuple(self, answer: str | list| tuple) -> tuple:
+        """
+        Ensure the answer is a tuple format.
+        Handle various input formats: tuple, list, string representation, etc.
+        """
+
+        if not answer:
+            return None
+        try:
+            if isinstance(answer, tuple):
+                return answer
+            elif isinstance(answer, list) and len(answer) == 2:
+                return tuple(answer)
+            elif isinstance(answer, str):
+                # Try to parse string representation of tuple/coordinates
+                # Handle formats like "(1.5, 2.3)", "1.5, 2.3", "[1.5, 2.3]"
+                clean_str = answer.strip().strip('()[]')
+                coords = [float(x.strip()) for x in clean_str.split(',')]
+                if len(coords) == 2:
+                    return tuple(coords)
+                else:
+                    logger.warning(f"Answer string does not contain exactly 2 coordinates: {answer}")
+                    return None
+            else:
+                logger.warning(f"Answer format not supported: {type(answer)} - {answer}")
+                return None
+        except Exception as e:
+            return None
+
+    def _calculate_difference(self, answer_tuple: tuple, closest_point: tuple):
+        """
+        Calculate the Euclidean distance between answer tuple and closest point tuple.
+        """
+        x1, y1 = answer_tuple
+        x2, y2 = closest_point
+
+        # Euclidean distance
+        difference = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+        return difference
+
+    def _closest_point_on_curve_tool(self, equation_str: str, point: tuple) -> tuple:
+        """
+        Given a curve equation y = f(x) as string and a point (x0, y0),
+        returns the closest point (x, y) on the curve to the point.
+
+        Args:
+            equation_str (str): Curve equation in terms of x, e.g. "-0.5*x**3 + 4*x**2 + 2*x + 5"
+            point (tuple): Coordinates (x0, y0) of the reference point
+
+        Note: this could be considered as a reverse process to what I saw in ladder paper(they do integration and I are assumed to do here differentiation)
+        Returns:
+            tuple: Closest point (x, y) on the curve
+        """
+        try:
+            x = sp.symbols('x')
+            expr_y = sp.sympify(equation_str)
+            x0, y0 = point
+
+            f_y = sp.lambdify(x, expr_y, 'numpy')
+
+            def dist_sq(x_val):
+                # Define distance squared function
+                y_val = f_y(x_val)
+                return (x_val - x0)**2 + (y_val - y0)**2
+
+            result = minimize_scalar(dist_sq)
+
+            x_closest = result.x
+            y_closest = f_y(x_closest)
+
+            return (float(x_closest), float(y_closest))
+
+        except Exception as e:
+            logger.warning(f"Error in closest_point_on_curve_tool: {e}")
+            return None
+```
+
+# 3- Reward Functions
+
+```py
+import re
+
+def format_reward(completions, **kwargs):
+    """Reward function that checks if the completion contains the answer format anywhere"""
+    pattern = r"<answer>.*?</answer>"
+    completion_contents = [completion[0]["content"] for completion in completions]
+    matches = [re.search(pattern, content) is not None for content in completion_contents]
+    return [1.0 if match else 0.0 for match in matches]
+
+def accuracy_reward(completions, **kwargs):
+    """
+    Reward function:
+    - If both content and solution are floats, reward = 1 / (1 + abs(diff))
+    - Otherwise, reward = 1.0 if solution in content (as string), else 0.0
+    """
+    solutions = kwargs['correct_answer']
+    completion_contents = [completion[0]["content"] for completion in completions]
+    rewards = []
+    for content, solution in zip(completion_contents, solutions):
+        # If both are floats
+        if isinstance(content, float) and isinstance(solution, float):
+            reward = 1.0 / (1.0 + abs(content - solution))
+            rewards.append(reward)
+        else:
+            # Convert both to string for comparison
+            if isinstance(solution, list):
+                if any(str(sol) in str(content) for sol in solution):
+                    rewards.append(1.0)
+                else:
+                    rewards.append(0.0)
+            else:
+                if str(solution) in str(content):
+                    rewards.append(1.0)
+                else:
+                    rewards.append(0.0)
+    return rewards
+```
+
+# 4- Training
+
+I used LORA Adapter to optimize the training process
+
+```py
+from trl import GRPOConfig
+
+training_args = GRPOConfig(
+    output_dir="Llama-3.1-8B-ladder",
+    learning_rate=1e-5,
+    remove_unused_columns=False,
+    gradient_accumulation_steps=16,
+    num_train_epochs=1,
+    fp16=True,
+
+    max_completion_length=64,
+    num_generations=4,
+    max_prompt_length=512,
+
+    report_to=["tensorboard"],
+    logging_steps=10,
+    push_to_hub=True,
+    save_strategy="steps",
+    save_steps=10,
+)
+
+```
+
+This is demo prompt used during finetuning
+
+```json
+{
+  "prompt": [
+    {
+      "content": "You are a Math Expert Assistant. When given a math question about finding the nearest point on a curve, solve it step by step using calculus methods.\n\nRequirements:\n- Show your mathematical work and reasoning\n- Do NOT use code to solve the problem\n- Provide the final answer as coordinates in tuple format\n- Enclose your final answer in <answer> tags\n\nFormat: <answer>(x, y)</answer>\nExample: <answer>(1.5, 2.3)</answer>",
+      "role": "system"
+    },
+    {
+      "content": "Find the point on the curve y = -4x^5 + 3x^3 - 2x^2 + 5x - 1 that is nearest to the point (3, 4). Provide the coordinates of this closest point as a tuple (x, y) without any additional explanation or commentary.",
+      "role": "user"
+    },
+    {
+      "content": "The answer is:\n<answer>(2.5, -1.875)</answer>",
+      "role": "assistant"
+    }
+  ]
+}
+```
+
+# 5- Evaluation
+
+The Model achieved `33.85%` accuracy over 130 problems
+and after finetuning :D
